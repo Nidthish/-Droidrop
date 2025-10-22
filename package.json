@@ -1,0 +1,23 @@
+{
+  "name": "advance-duplicate-explorer",
+  "version": "2.0.0",
+  "description": "Desktop app to explore and transfer files from an Android device.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "adb",
+    "android",
+    "files"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^21.0.0"
+  },
+  "dependencies": {
+    "gsmarena-api": "^2.0.5",
+    "socket.io-client": "^4.8.1"
+  }
+}

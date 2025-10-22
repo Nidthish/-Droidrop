@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Droidrop v3.5</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="intro-screen" class="intro-container">
+    <img src="logo.jpeg" alt="Company Logo" class="intro-logo">
+</div>
+    <div id="toast-container"></div>
+    <div class="toolbar-top">
+        <div id="status-bar" class="status-bar">Connecting to mobile...</div>
+        <div class="user-info">
+            <span id="user-display">Logged Out</span>
+            <div class="dropdown">
+                <button class="dropbtn">Manage Account</button>
+                <div class="dropdown-content">
+                    <a href="#" id="btn-login">Login</a>
+                    <a href="#" id="btn-logout" class="hidden">Logout</a>
+                    <a href="#" id="btn-create-account">Create Account</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="panel file-explorer">
+            <div class="toolbar">
+    <button id="btn-refresh" title="Refresh Status"><i class="fa-solid fa-arrows-rotate"></i></button>
+    <button id="btn-up" title="Go Up"><i class="fa-solid fa-rotate-left"></i></button>
+    <button id="btn-dark-mode-toggle" title="Toggle Dark Mode"><i class="fa-solid fa-moon"></i></button>
+    <input type="text" id="current-path" readonly value="/sdcard/">
+</div>
+            <div id="tree-view" class="tree-view"></div>
+            <div class="action-bar">
+                <button id="btn-handle-files">Local Backup...</button>
+                <button id="btn-cloud-backup"> <i class="fa-solid fa-cloud" aria-hidden="true"></i> cloud Backup</button>
+                <button id="btn-cloud-restore"><i class="fa-solid fa-cloud" aria-hidden="true"></i> Restore</button>
+                <button id="btn-choose-dest">Choose Destination...</button>
+                <button id="btn-cancel" disabled="">Cancel Operation</button>
+            </div>
+            <div class="destination-bar">
+                <span>Local Backup Destination:</span>
+                <strong id="destination-path-display"></strong>
+            </div>
+        </div>
+        <div class="panel log-viewer">
+            <pre id="log-output" class="log-output"></pre>
+            <div class="progress-container">
+                <progress id="progress-bar" value="0" max="100"></progress>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-backdrop" class="modal-backdrop hidden"></div>
+
+    <div id="modal-transfer-options" class="modal hidden">
+        <h2>Local Backup Options</h2>
+        <p>How would you like to handle the selected files?</p>
+        <div class="modal-buttons">
+            <button data-action="find_duplicates">Find Duplicates & Transfer...</button>
+            <button data-action="copy_all">Copy All (Skip existing)</button>
+            <button data-action="move_all">Move (Wipe from Phone)</button>
+            <button data-action="cancel">Cancel</button>
+        </div>
+    </div>
+    
+    <div id="modal-duplicate-results" class="modal hidden">
+        <h2>Duplicate Scan Complete</h2>
+        <p id="duplicate-summary-text"></p>
+        <p class="modal-info">Choose which files to transfer to the local backup.</p>
+        <div class="modal-buttons">
+            <button data-action="transfer_uniques">Transfer Unique Files Only</button>
+            <button data-action="transfer_all">Transfer All Scanned Files</button>
+            <button data-action="select_manually">Select Files Manually...</button>
+            <button data-action="cancel">Cancel</button>
+        </div>
+    </div>
+    
+    <div id="modal-manual-select" class="modal wide hidden">
+        <h2>Manual Duplicate Selection</h2>
+        <div class="modal-info">
+            Review the duplicate groups below. Keep at least one file unchecked in each group to preserve it. Files that are checked will be transferred.
+        </div>
+        <div id="manual-select-list" class="manual-select-list"></div>
+        <div class="modal-buttons">
+    <button id="manual-transfer-button" class="btn btn-primary">Transfer Selected</button>
+    <button id="manual-preview-button" class="btn btn-secondary">Preview Selected</button>
+    <button id="manual-cancel-button" class="btn btn-tertiary">Cancel</button>
+</div>
+    </div>
+
+    <div id="modal-create-account" class="modal hidden">
+        <h2>Create New Cloud Account</h2>
+        <p class="modal-info">Choose a unique ID and a subscription plan to get started.</p>
+        <form id="create-account-form">
+            <label for="user-id">User ID:</label>
+            <input type="text" id="user-id" name="user_id" required><br>
+            <label for="plan-select">Select Plan:</label>
+            <select id="plan-select" name="plan" required>
+                <option value="free">Free (1GB, 1hr)</option>
+                <option value="basic">Basic (10GB, 1 day)</option>
+                <option value="pro">Pro (100GB, 3 days)</option>
+            </select>
+            <div class="modal-buttons">
+                <button type="submit">Create Account</button>
+                <button type="button" class="cancel-modal" data-modal="modal-create-account">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="modal-login" class="modal hidden">
+        <h2>Login to Cloud Account</h2>
+        <form id="login-form">
+            <label for="login-user-id">User ID:</label>
+            <input type="text" id="login-user-id" name="user_id" required>
+            <div class="modal-buttons">
+                <button type="submit">Login</button>
+                <button type="button" class="cancel-modal" data-modal="modal-login">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="modal-admin" class="modal wide hidden">
+        <h2>Admin Panel</h2>
+        <div id="admin-table-container">
+            <table id="admin-table">
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Plan</th>
+                        <th>Container</th>
+                        <th>Created</th>
+                        <th>Expiry</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-table-body">
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-buttons">
+            <button id="admin-refresh">Refresh</button>
+            <button class="cancel-modal" data-modal="modal-admin">Close</button>
+        </div>
+    </div>
+    
+    <div id="modal-threat-detected" class="modal hidden">
+        <h2>Threat Detected!</h2>
+        <p id="threat-file-name"></p>
+        <div class="modal-info">
+            A potential threat was found. Do you want to transfer this file anyway or skip it?
+        </div>
+        <div class="modal-buttons">
+            <button id="btn-threat-skip">Skip</button>
+            <button id="btn-threat-transfer">Transfer Anyway</button>
+        </div>
+    </div>
+
+    <script src="https://kit.fontawesome.com/8ef7076467.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.js"></script>
+    <script src="renderer.js"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const introScreen = document.getElementById('intro-screen');
+        const mainContent = document.getElementById('main-content');
+        const logo = introScreen.querySelector('.intro-logo');
+
+        // Listen for the animation to end
+        logo.addEventListener('animationend', () => {
+            // After the logo fade-in, wait a moment then fade out the intro screen
+            setTimeout(() => {
+                introScreen.classList.add('fade-out');
+                mainContent.classList.add('show-content');
+            }, 1000); // Wait 1 second before the next animation
+        });
+    });
+
+document.addEventListener('DOMContentLoaded', () => {
+  const darkModeToggleBtn = document.getElementById('btn-dark-mode-toggle');
+  
+  darkModeToggleBtn.addEventListener('click', () => {
+    // Get the icon element inside the button
+    const icon = darkModeToggleBtn.querySelector('i');
+
+    // Toggle the classes to swap the icon
+    icon.classList.toggle('fa-moon');
+    icon.classList.toggle('fa-sun');
+  });
+});
+</script>
+
+<div id="modal-confirm-overwrite" class="modal hidden">
+        <h2>File Already Exists</h2>
+        <p>A file with the same name already exists at the destination:</p>
+        <p id="overwrite-file-name" class="modal-info" style="font-weight: bold; word-break: break-all;"></p>
+        <p>Would you like to overwrite it?</p>
+        <div class="modal-buttons">
+            <button id="btn-overwrite-confirm">Overwrite</button>
+            <button id="btn-overwrite-skip" style="background-color: #ff8f00; border-color: transparent;">Skip</button>
+        </div>
+    </div>
+
+    <script src="https://kit.fontawesome.com/8ef7076467.js" crossorigin="anonymous"></script>
+
+</body>
+</html>
